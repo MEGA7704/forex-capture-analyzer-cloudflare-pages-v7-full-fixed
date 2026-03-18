@@ -117,15 +117,20 @@ export function refreshComputedStatus(license) {
 
   if (previous === 'blocked') return out;
 
-  if (out.mode === 'duration' && isExpired(out)) out.status = 'expired';
-  else if (out.mode === 'count' && isCountExhausted(out)) out.status = 'quota_reached';
-  else if (
+  if (out.mode === 'duration' && isExpired(out)) {
+    out.status = 'expired';
+  } else if (out.mode === 'count' && isCountExhausted(out)) {
+    out.status = 'quota_reached';
+  } else if (
     out.activated_at ||
     out.device_locked ||
     out.session_count > 0 ||
     out.analysis_count > 0
-  ) out.status = 'active';
-  else out.status = previous && previous !== 'blocked' ? previous : 'unused';
+  ) {
+    out.status = 'active';
+  } else {
+    out.status = previous && previous !== 'blocked' ? previous : 'unused';
+  }
 
   return out;
 }
@@ -136,7 +141,9 @@ export function getLicenseAccessError(license) {
   const x = refreshComputedStatus(license);
 
   if (x.status === 'blocked') return 'Licence bloquée';
-  if (x.mode === 'duration' && (x.status === 'expired' || isExpired(x))) return 'Licence expirée';
+  if (x.mode === 'duration' && (x.status === 'expired' || isExpired(x))) {
+    return 'Licence expirée';
+  }
   if (x.mode === 'count' && (x.status === 'quota_reached' || isCountExhausted(x))) {
     return 'Quota de captures atteint';
   }
@@ -204,10 +211,14 @@ export function buildLicenseFromPlan(plan = {}) {
   return refreshComputedStatus({
     license_key: generateLicenseKey('FXA'),
     plan_id: String(
-      plan.plan_id || (mode === 'count' ? `CAPTURE_${analysisLimit || 5}` : `ACCESS_${durationDays}_DAYS`)
+      plan.plan_id ||
+        (mode === 'count'
+          ? `CAPTURE_${analysisLimit || 5}`
+          : `ACCESS_${durationDays}_DAYS`)
     ).trim(),
     plan_label: String(
-      plan.plan_label || (mode === 'count' ? `${analysisLimit || 5} Captures` : `${durationDays} Jours`)
+      plan.plan_label ||
+        (mode === 'count' ? `${analysisLimit || 5} Captures` : `${durationDays} Jours`)
     ).trim(),
     price_usdt: toFiniteNumber(plan.price_usdt, 0),
     mode,
@@ -310,7 +321,9 @@ export async function verifyToken(token, secret) {
   if (sig !== expected) throw new Error('Signature invalide');
 
   const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(p)));
-  if (payload.exp && Date.now() > payload.exp * 1000) throw new Error('Session expirée');
+  if (payload.exp && Date.now() > payload.exp * 1000) {
+    throw new Error('Session expirée');
+  }
 
   return payload;
 }
@@ -324,33 +337,8 @@ export function requireAdmin(request, env) {
   }
 }
 
-async function ensureSeeded(env, request) {
-  const licensesMarker = await env.LICENSES.get('__seeded_v1');
-  const eventsMarker = await env.EVENTS.get('__seeded_v1');
-
-  if (licensesMarker === '1' && eventsMarker === '1') return;
-
-  if (licensesMarker !== '1') {
-    const r = await env.ASSETS.fetch(new Request(new URL('/seed/licenses.seed.json', request.url)));
-    const seed = await r.json().catch(() => ({ licenses: [] }));
-    const licenses = Array.isArray(seed?.licenses) ? seed.licenses : (Array.isArray(seed) ? seed : []);
-
-    for (const item of licenses) {
-      const normalized = refreshComputedStatus(item);
-      if (normalized?.license_key) {
-        await env.LICENSES.put(normalized.license_key, JSON.stringify(normalized));
-      }
-    }
-
-    await env.LICENSES.put('__seeded_v1', '1');
-  }
-
-  if (eventsMarker !== '1') {
-    const r = await env.ASSETS.fetch(new Request(new URL('/seed/events.seed.json', request.url)));
-    const seed = await r.json().catch(() => []);
-    await env.EVENTS.put(EVENTS_KEY, JSON.stringify(Array.isArray(seed) ? seed : []));
-    await env.EVENTS.put('__seeded_v1', '1');
-  }
+async function ensureSeeded() {
+  return;
 }
 
 async function listDirectKvLicenses(env) {
