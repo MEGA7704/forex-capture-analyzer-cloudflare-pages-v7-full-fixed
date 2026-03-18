@@ -2,14 +2,5 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "forex-capture-analyzer-cloudflare-pages",
   "compatibility_date": "2026-03-17",
-  "pages_build_output_dir": "public",
-  "kv_namespaces": [
-    { "binding": "LICENSES", "id": "PUT_LICENSES_NAMESPACE_ID_HERE", "preview_id": "PUT_LICENSES_PREVIEW_NAMESPACE_ID_HERE" },
-    { "binding": "EVENTS", "id": "PUT_EVENTS_NAMESPACE_ID_HERE", "preview_id": "PUT_EVENTS_PREVIEW_NAMESPACE_ID_HERE" }
-  ],
-  "vars": {
-    "LICENSE_SECRET": "CHANGE_ME_LICENSE_SECRET",
-    "ADMIN_TOKEN": "CHANGE_ME_ADMIN_TOKEN",
-    "ADMIN_MASTER_KEY": "CHANGE_ME_ADMIN_MASTER_KEY"
-  }
+  "pages_build_output_dir": "public"
 }
