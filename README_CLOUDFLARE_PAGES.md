@@ -1,0 +1,1 @@
+Version corrigée pour Cloudflare Pages avec deux KV séparés: LICENSES et EVENTS. /health retourne OK en texte simple. Ajoutez les variables d'environnement LICENSE_SECRET, ADMIN_TOKEN et ADMIN_MASTER_KEY dans Cloudflare puis redéployez.
