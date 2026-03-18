@@ -1,5 +1,5 @@
 export async function onRequest(context) {
-  const { env } = context;
+  const { env } = context; 
 
   const hasLICENSES =
     !!env?.LICENSES && typeof env.LICENSES.get === 'function';
