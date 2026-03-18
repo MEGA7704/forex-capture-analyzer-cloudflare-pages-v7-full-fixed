@@ -1,5 +1,5 @@
+const LICENSES_KEY = 'licenses_blob_v1';
 const EVENTS_KEY = 'events_blob_v1';
-const LICENSE_SKIP_KEYS = new Set(['__seeded_v1', EVENTS_KEY]);
 
 export function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -59,6 +59,7 @@ export function isExpired(license) {
 
 export function isCountExhausted(license) {
   if (!license) return false;
+
   const mode = String(license.mode || '').toLowerCase();
   if (!['count', 'captures'].includes(mode)) return false;
 
@@ -341,37 +342,18 @@ async function ensureSeeded() {
   return;
 }
 
-async function listDirectKvLicenses(env) {
-  const found = [];
-  let cursor;
-
-  do {
-    const page = await env.LICENSES.list({ cursor, limit: 1000 });
-
-    for (const item of page.keys || []) {
-      const key = normalizeKey(item.name);
-      if (!key || LICENSE_SKIP_KEYS.has(key)) continue;
-
-      const value = await env.LICENSES.get(key, 'json');
-      if (value && typeof value === 'object') {
-        const normalized = refreshComputedStatus({
-          ...value,
-          license_key: normalizeKey(value.license_key || key),
-        });
-        if (normalized) found.push(normalized);
-      }
-    }
-
-    cursor = page.list_complete ? undefined : page.cursor;
-  } while (cursor);
-
-  return found;
-}
-
 export async function getLicenses(env, request) {
   await ensureSeeded(env, request);
-  const items = await listDirectKvLicenses(env);
+
+  const raw = await env.LICENSES.get(LICENSES_KEY, 'json');
+  const items = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.licenses)
+      ? raw.licenses
+      : [];
+
   return items
+    .map((item) => refreshComputedStatus(item))
     .filter(Boolean)
     .sort((a, b) => a.license_key.localeCompare(b.license_key));
 }
@@ -381,12 +363,7 @@ export async function saveLicenses(env, items) {
     .map((item) => refreshComputedStatus(item))
     .filter(Boolean);
 
-  for (const item of normalized) {
-    if (item?.license_key) {
-      await env.LICENSES.put(item.license_key, JSON.stringify(item));
-    }
-  }
-
+  await env.LICENSES.put(LICENSES_KEY, JSON.stringify(normalized));
   return normalized;
 }
 
@@ -406,16 +383,8 @@ export async function getLicense(env, request, key) {
   const normalizedKey = normalizeKey(key);
   if (!normalizedKey) return null;
 
-  const direct = await env.LICENSES.get(normalizedKey, 'json');
-
-  if (!direct || typeof direct !== 'object') {
-    return null;
-  }
-
-  return refreshComputedStatus({
-    ...direct,
-    license_key: normalizeKey(direct.license_key || normalizedKey),
-  });
+  const items = await getLicenses(env, request);
+  return items.find((x) => normalizeKey(x.license_key) === normalizedKey) || null;
 }
 
 export async function putLicense(env, request, license) {
@@ -426,7 +395,18 @@ export async function putLicense(env, request, license) {
     throw new Error('Licence invalide');
   }
 
-  await env.LICENSES.put(normalized.license_key, JSON.stringify(normalized));
+  const items = await getLicenses(env, request);
+  const idx = items.findIndex(
+    (x) => normalizeKey(x.license_key) === normalizeKey(normalized.license_key)
+  );
+
+  if (idx >= 0) {
+    items[idx] = normalized;
+  } else {
+    items.push(normalized);
+  }
+
+  await saveLicenses(env, items);
   return normalized;
 }
 
