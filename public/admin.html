@@ -6,7 +6,7 @@
 <title>Forex Capture Analyzer Premium — Admin Licences Temps Réel V28</title>
 <style>
 :root{
-  --bg1:#071c21;--bg2:#0b2b31;--bg3:#0f3a3f;--gold:#ffd400;--cyan:#16d9c7;
+  --bg1:#071c21;--bg2:#0b2b31;--bg3:#0f3a3f;--gold:#ffd400;--cyan:#16d9c7;--danger:#ff6b88;--soft:#9ad8ff;
 }
 *{box-sizing:border-box}
 body{
@@ -32,6 +32,7 @@ input,select,button,textarea{
 button{cursor:pointer}
 button.primary{background:linear-gradient(180deg, rgba(22,217,199,.28), rgba(22,217,199,.08));border-color:rgba(22,217,199,.35)}
 button.warn{background:linear-gradient(180deg, rgba(255,212,0,.24), rgba(255,212,0,.08));border-color:rgba(255,212,0,.35)}
+button.ghost{background:rgba(255,255,255,.05)}
 button:disabled{opacity:.6;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;margin-top:14px}
 .kv{padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(0,0,0,.12)}
@@ -43,8 +44,46 @@ th,td{border-bottom:1px solid rgba(255,255,255,.1);padding:10px 8px;text-align:l
 tbody tr:hover{background:rgba(255,255,255,.04)}
 .small{font-size:12px;color:rgba(255,255,255,.7)}
 .badge{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);font-size:11px;font-weight:800}
+.badge.demo{border-color:rgba(255,212,0,.28);background:rgba(255,212,0,.10);color:#fff1a0}
+.badge.premium{border-color:rgba(22,217,199,.28);background:rgba(22,217,199,.10);color:#b8fff4}
+.badge.risk{border-color:rgba(255,107,136,.35);background:rgba(255,107,136,.12);color:#ffd5df}
+.badge.low{border-color:rgba(255,212,0,.35);background:rgba(255,212,0,.10);color:#fff0a0}
 .log{max-height:240px;overflow:auto;font-size:12px;line-height:1.5;background:rgba(0,0,0,.15);padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
-@media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(170px,1fr));}}
+.hero-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-top:16px}
+.analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;margin-top:16px}
+.tone-card{padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.12)}
+.tone-card h3{margin:0 0 8px;font-size:14px}
+.tone-card .big{font-size:26px;font-weight:900;margin-top:4px}
+.tone-card .hint{font-size:12px;color:rgba(255,255,255,.68);margin-top:6px;line-height:1.45}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.mini-list{display:grid;gap:8px}
+.mini-item{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.cell-2line{display:flex;flex-direction:column;gap:4px}
+.clickable-row{cursor:pointer}
+.clickable-row td:first-child b{text-decoration:underline;text-decoration-color:rgba(255,255,255,.15)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999}
+.modal-backdrop.show{display:flex}
+.modal-box{width:min(1120px,100%);max-height:92vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:24px;background:linear-gradient(180deg, rgba(20,52,58,.98), rgba(8,23,27,.98));box-shadow:0 30px 90px rgba(0,0,0,.45);padding:18px}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+.modal-title{margin:0;font-size:24px;color:#fff;font-weight:900}
+.modal-sub{margin-top:6px;color:rgba(255,255,255,.68);font-size:12px;line-height:1.5}
+.modal-close{min-width:44px;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font-size:20px;font-weight:900;cursor:pointer}
+.detail-grid{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:12px}
+.detail-box{border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)}
+.detail-box span{display:block;font-size:11px;color:rgba(255,255,255,.62);margin-bottom:6px}
+.detail-box b{display:block;font-size:14px;color:#fff;line-height:1.45;word-break:break-word}
+.detail-full{margin-top:12px;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)}
+.detail-full .label{display:block;font-size:11px;color:rgba(255,255,255,.62);margin-bottom:8px}
+.detail-pre{margin:0;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.55;color:#fff}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.tab-btn{padding:9px 12px;border-radius:999px;font-size:12px}
+.tab-btn.active{background:linear-gradient(180deg, rgba(22,217,199,.28), rgba(22,217,199,.08));border-color:rgba(22,217,199,.35)}
+.hidden{display:none !important}
+@media(max-width:1180px){.analytics-grid{grid-template-columns:repeat(2,minmax(160px,1fr))}.detail-grid{grid-template-columns:repeat(2,minmax(220px,1fr))}}
+@media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(170px,1fr))}.hero-grid,.split{grid-template-columns:1fr}}
+@media(max-width:760px){.detail-grid,.analytics-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -52,12 +91,13 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
   <div class="card">
     <div class="row" style="justify-content:space-between">
       <div>
-        <h1>Dashboard Admin Licences — V28 </h1>
-        <div class="sub">Gestion temps réel des licences, blocage piratage, limite appareil, statistiques clients et expiration automatique.</div>
+        <h1>Dashboard Admin Licences — V28 Ultra Premium</h1>
+        <div class="sub">Outil de contrôle SaaS pro, analyse anti-piratage non destructive, vision business licences actives et conversion démo → payant.</div>
       </div>
       <div class="row">
         <input id="adminToken" type="password" placeholder="ADMIN_TOKEN" style="min-width:240px"/>
         <button id="btnSaveToken" class="primary">Enregistrer token</button>
+        <button id="btnExportList" class="ghost" type="button">Exporter liste JSON</button>
         <a href="/" style="text-decoration:none"><button class="warn" type="button">Retour logiciel</button></a>
       </div>
     </div>
@@ -73,8 +113,48 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
       <div class="kv"><span>Crédits restants cumulés</span><b id="k_remaining">0</b></div>
     </div>
 
+    <div class="hero-grid">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:18px;font-weight:900">Cockpit business</div>
+            <div class="small" style="margin-top:6px">Indicateurs calculés uniquement côté admin à partir des données déjà remontées par ton API. Aucun changement de compteur ou de licence.</div>
+          </div>
+          <div class="chip-row" id="healthFlags"></div>
+        </div>
+        <div class="analytics-grid">
+          <div class="tone-card"><h3>Licences démo</h3><div class="big" id="m_demo_total">0</div><div class="hint">Total démos visibles dans la liste courante</div></div>
+          <div class="tone-card"><h3>Licences premium</h3><div class="big" id="m_paid_total">0</div><div class="hint">Licences hors plan démo</div></div>
+          <div class="tone-card"><h3>Actives payantes</h3><div class="big" id="m_paid_active">0</div><div class="hint">Actives et non démo</div></div>
+          <div class="tone-card"><h3>Conversion démo → payant</h3><div class="big" id="m_conversion">0%</div><div class="hint">Estimation par email/device détecté dans les données existantes</div></div>
+          <div class="tone-card"><h3>Risque piratage</h3><div class="big" id="m_risky_total">0</div><div class="hint">Détection heuristique sans blocage automatique</div></div>
+          <div class="tone-card"><h3>Prêtes à convertir</h3><div class="big" id="m_hot_leads">0</div><div class="hint">Démos quasi consommées ou déjà très engagées</div></div>
+          <div class="tone-card"><h3>Emails uniques</h3><div class="big" id="m_unique_emails">0</div><div class="hint">Selon les champs email remontés</div></div>
+          <div class="tone-card"><h3>Devices uniques</h3><div class="big" id="m_unique_devices">0</div><div class="hint">Empreintes visibles dans la liste courante</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:18px;font-weight:900">Centre anti-piratage</div>
+        <div class="small" style="margin-top:6px">Vue d’alerte seulement. Rien n’est modifié tant que tu n’exécutes pas une action admin existante.</div>
+        <div id="antiPiracyBoard" class="mini-list" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <div style="font-size:18px;font-weight:900">Leads chauds démo → premium</div>
+        <div class="small" style="margin-top:6px">Basé sur la consommation et l’activité visibles dans les licences démo.</div>
+        <div id="hotLeadBoard" class="mini-list" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:18px;font-weight:900">Clusters suspects</div>
+        <div class="small" style="margin-top:6px">Même email ou même device sur plusieurs licences : indicateur de contrôle rapide.</div>
+        <div id="clusterBoard" class="mini-list" style="margin-top:12px"></div>
+      </div>
+    </div>
+
     <div class="row" style="margin-top:16px">
-      <input id="q" placeholder="Recherche clé ou device"/>
+      <input id="q" placeholder="Recherche clé, email ou device"/>
       <select id="statusFilter">
         <option value="">Tous statuts</option>
         <option value="unused">unused</option>
@@ -86,6 +166,7 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
       </select>
       <select id="planFilter">
         <option value="">Tous plans</option>
+        <option value="DEMO_10">DEMO_10</option>
         <option value="CAPTURE_5">CAPTURE_5</option>
         <option value="CAPTURE_25">CAPTURE_25</option>
         <option value="CAPTURE_50">CAPTURE_50</option>
@@ -102,7 +183,7 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
       <table>
         <thead>
           <tr>
-            <th>Licence</th><th>Plan</th><th>Statut</th><th>Device</th><th>Expiration</th><th>Restant</th><th>Analyses</th><th>Actions</th>
+            <th>Licence</th><th>Segment</th><th>Plan</th><th>Statut</th><th>Utilisateur</th><th>Device</th><th>Expiration</th><th>Restant</th><th>Analyses</th><th>Risque</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -196,6 +277,34 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
   </div>
 </div>
 
+<div id="licenseModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h2 class="modal-title">Détails complets de la licence</h2>
+        <div class="modal-sub">Activation, utilisateur, appareil, score de risque, potentiel commercial et vue brute. Aucun compteur n’est modifié depuis ce popup.</div>
+      </div>
+      <button id="btnCloseLicenseModal" class="modal-close" type="button">×</button>
+    </div>
+
+    <div class="tabs">
+      <button id="tabSummary" class="tab-btn active" type="button">Résumé</button>
+      <button id="tabSignals" class="tab-btn" type="button">Signaux</button>
+      <button id="tabRaw" class="tab-btn" type="button">JSON brut</button>
+    </div>
+
+    <div id="tabSummaryPanel"></div>
+    <div id="tabSignalsPanel" class="hidden"></div>
+    <div id="tabRawPanel" class="hidden"></div>
+
+    <div class="modal-actions">
+      <button id="btnModalChoose" type="button" class="primary">Charger dans les actions admin</button>
+      <button id="btnModalCopyKey" type="button" class="ghost">Copier la clé</button>
+      <button id="btnModalCloseBottom" type="button" class="warn">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const TOKEN_KEY = 'FXA_ADMIN_TOKEN_V28';
 const $ = id => document.getElementById(id);
@@ -204,6 +313,10 @@ $('adminToken').value = localStorage.getItem(TOKEN_KEY) || '';
 let autoRefreshTimer = null;
 let isRefreshing = false;
 let lastGeneratedLicenses = [];
+let currentListItems = [];
+let currentStatsPayload = null;
+let currentInsights = null;
+let currentModalLicense = null;
 
 function adminHeaders(extra = {}){
   const token = localStorage.getItem(TOKEN_KEY) || '';
@@ -225,6 +338,98 @@ function escapeHtml(value){
 
 function fmt(v){
   return (v === null || typeof v === 'undefined' || v === '') ? '—' : String(v);
+}
+
+function num(v, fallback = 0){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function lower(v){
+  return String(v || '').trim().toLowerCase();
+}
+
+function getEmail(item){
+  return (
+    item.email ||
+    item.user_email ||
+    item.client_email ||
+    (item.clientMeta && item.clientMeta.email) ||
+    (item.client_meta && item.client_meta.email) ||
+    ''
+  );
+}
+
+function getUserName(item){
+  return (
+    item.user_name ||
+    item.full_name ||
+    item.client_name ||
+    item.customer_name ||
+    item.owner_name ||
+    ''
+  );
+}
+
+function getDisplayUser(item){
+  return getUserName(item) || getEmail(item) || '—';
+}
+
+function getDevice(item){
+  return item.device_id || item.device_locked || item.hardware_id || '';
+}
+
+function getPlan(item){
+  return String(item.plan_id || item.plan_label || '');
+}
+
+function isDemoPlanValue(value){
+  return /demo/i.test(String(value || ''));
+}
+
+function isDemo(item){
+  return isDemoPlanValue(item.plan_id) || isDemoPlanValue(item.plan_label) || /^DEMO/i.test(String(item.license_key || ''));
+}
+
+function getStatus(item){
+  return String(item.status || '').toLowerCase();
+}
+
+function getRemaining(item){
+  if (item.analyses_remaining === null || typeof item.analyses_remaining === 'undefined' || item.analyses_remaining === '') return null;
+  return num(item.analyses_remaining, 0);
+}
+
+function getAnalysisCount(item){
+  return num(item.analysis_count, 0);
+}
+
+function getAnalysisLimit(item){
+  const direct = item.analysis_limit;
+  if (direct !== null && typeof direct !== 'undefined' && direct !== '') return num(direct, 0);
+  const remaining = getRemaining(item);
+  if (remaining === null) return 0;
+  return remaining + getAnalysisCount(item);
+}
+
+function getUsageRatio(item){
+  const limit = getAnalysisLimit(item);
+  if (!limit) return 0;
+  return Math.min(1, getAnalysisCount(item) / limit);
+}
+
+function prettyJson(value){
+  try{
+    if(value === null || typeof value === 'undefined' || value === '') return '—';
+    if(typeof value === 'string') return value;
+    return JSON.stringify(value, null, 2);
+  }catch{
+    return String(value ?? '—');
+  }
+}
+
+function copyText(text){
+  return navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(text) : Promise.reject(new Error('Clipboard indisponible'));
 }
 
 async function fetchJson(url, opts = {}){
@@ -271,6 +476,8 @@ async function loadStats(){
     headers: adminHeaders()
   });
 
+  currentStatsPayload = data;
+
   const totals = data.totals || {};
   const eventCounts = data.eventCounts || {};
   const byPlan = data.byPlan || {};
@@ -294,6 +501,153 @@ async function loadStats(){
   ).join('') || 'Aucun événement.';
 }
 
+function computeInsights(items){
+  const devices = new Map();
+  const emails = new Map();
+  const demoItems = [];
+  const paidItems = [];
+  const hotLeads = [];
+  const riskEntries = [];
+
+  for(const item of items){
+    const device = lower(getDevice(item));
+    const email = lower(getEmail(item));
+    const deviceKey = device || '';
+    const emailKey = email || '';
+
+    if(deviceKey){
+      if(!devices.has(deviceKey)) devices.set(deviceKey, []);
+      devices.get(deviceKey).push(item);
+    }
+    if(emailKey){
+      if(!emails.has(emailKey)) emails.set(emailKey, []);
+      emails.get(emailKey).push(item);
+    }
+
+    if(isDemo(item)) demoItems.push(item); else paidItems.push(item);
+  }
+
+  function getReasons(item){
+    const reasons = [];
+    const device = lower(getDevice(item));
+    const email = lower(getEmail(item));
+    const status = getStatus(item);
+    const remaining = getRemaining(item);
+    const limit = getAnalysisLimit(item);
+    const count = getAnalysisCount(item);
+
+    if(status.includes('pirated')) reasons.push('Statut piraté');
+    if(status === 'blocked') reasons.push('Licence bloquée');
+    if(device && devices.get(device)?.length > 1) reasons.push('Même device sur ' + devices.get(device).length + ' licences');
+    if(email && emails.get(email)?.length > 1) reasons.push('Même email sur ' + emails.get(email).length + ' licences');
+    if(status === 'active' && !device) reasons.push('Active sans device visible');
+    if(remaining !== null && remaining < 0) reasons.push('Crédits négatifs');
+    if(limit > 0 && count > limit) reasons.push('Analyses > limite');
+    if(isDemo(item) && count >= 8) reasons.push('Démo très engagée');
+    if(isDemo(item) && remaining !== null && remaining <= 2) reasons.push('Démo proche fin');
+    if(!isDemo(item) && status === 'unused' && count > 0) reasons.push('Usage sans activation complète');
+    return reasons;
+  }
+
+  const risky = items.map(item => {
+    const reasons = getReasons(item);
+    return { item, reasons, score: reasons.length };
+  }).filter(entry => entry.score > 0).sort((a,b) => b.score - a.score || getAnalysisCount(b.item) - getAnalysisCount(a.item));
+
+  for(const item of demoItems){
+    const remaining = getRemaining(item);
+    const count = getAnalysisCount(item);
+    const score = (remaining !== null && remaining <= 2 ? 2 : 0) + (count >= 8 ? 2 : 0) + (lower(getStatus(item)) === 'active' ? 1 : 0);
+    if(score > 0){
+      hotLeads.push({ item, score, reasons: getReasons(item) });
+    }
+  }
+
+  hotLeads.sort((a,b) => b.score - a.score || getAnalysisCount(b.item) - getAnalysisCount(a.item));
+
+  const convertedMatches = new Set();
+  for(const paid of paidItems){
+    const paidEmail = lower(getEmail(paid));
+    const paidDevice = lower(getDevice(paid));
+    if(paidEmail && emails.has(paidEmail) && emails.get(paidEmail).some(isDemo)) convertedMatches.add('e:' + paidEmail);
+    if(paidDevice && devices.has(paidDevice) && devices.get(paidDevice).some(isDemo)) convertedMatches.add('d:' + paidDevice);
+  }
+
+  const suspiciousClusters = [];
+  for(const [device, list] of devices.entries()){
+    if(list.length > 1) suspiciousClusters.push({ type:'device', key:device, list });
+  }
+  for(const [email, list] of emails.entries()){
+    if(list.length > 1) suspiciousClusters.push({ type:'email', key:email, list });
+  }
+  suspiciousClusters.sort((a,b) => b.list.length - a.list.length);
+
+  return {
+    demoTotal: demoItems.length,
+    paidTotal: paidItems.length,
+    paidActive: paidItems.filter(item => getStatus(item) === 'active').length,
+    riskyTotal: risky.length,
+    hotLeadTotal: hotLeads.length,
+    uniqueEmails: emails.size,
+    uniqueDevices: devices.size,
+    convertedEstimate: demoItems.length ? Math.round((convertedMatches.size / Math.max(1, demoItems.length)) * 100) : 0,
+    risky,
+    hotLeads,
+    suspiciousClusters,
+    devices,
+    emails
+  };
+}
+
+function renderInsights(){
+  const items = currentListItems;
+  currentInsights = computeInsights(items);
+  const info = currentInsights;
+
+  $('m_demo_total').textContent = info.demoTotal;
+  $('m_paid_total').textContent = info.paidTotal;
+  $('m_paid_active').textContent = info.paidActive;
+  $('m_conversion').textContent = info.convertedEstimate + '%';
+  $('m_risky_total').textContent = info.riskyTotal;
+  $('m_hot_leads').textContent = info.hotLeadTotal;
+  $('m_unique_emails').textContent = info.uniqueEmails;
+  $('m_unique_devices').textContent = info.uniqueDevices;
+
+  const flags = [];
+  flags.push('<span class="badge ' + (info.riskyTotal ? 'risk' : 'premium') + '">Risque: ' + info.riskyTotal + '</span>');
+  flags.push('<span class="badge demo">Démos: ' + info.demoTotal + '</span>');
+  flags.push('<span class="badge premium">Actives payantes: ' + info.paidActive + '</span>');
+  $('healthFlags').innerHTML = flags.join('');
+
+  $('antiPiracyBoard').innerHTML = info.risky.slice(0,6).map(entry => {
+    const item = entry.item;
+    return '<div class="mini-item">' +
+      '<div class="row" style="justify-content:space-between"><b>' + escapeHtml(item.license_key || '—') + '</b><span class="badge risk">Score ' + escapeHtml(entry.score) + '</span></div>' +
+      '<div class="small" style="margin-top:6px">' + escapeHtml(getDisplayUser(item)) + ' • ' + escapeHtml(getDevice(item) || 'device inconnu') + '</div>' +
+      '<div class="small" style="margin-top:6px">' + escapeHtml(entry.reasons.join(' • ')) + '</div>' +
+    '</div>';
+  }).join('') || '<div class="mini-item">Aucun signal critique détecté dans la liste courante.</div>';
+
+  $('hotLeadBoard').innerHTML = info.hotLeads.slice(0,6).map(entry => {
+    const item = entry.item;
+    return '<div class="mini-item">' +
+      '<div class="row" style="justify-content:space-between"><b>' + escapeHtml(item.license_key || '—') + '</b><span class="badge demo">Lead ' + escapeHtml(entry.score) + '</span></div>' +
+      '<div class="small" style="margin-top:6px">' + escapeHtml(getDisplayUser(item)) + '</div>' +
+      '<div class="small" style="margin-top:6px">Restant: ' + escapeHtml(fmt(item.analyses_remaining)) + ' • Analyses: ' + escapeHtml(fmt(item.analysis_count)) + '</div>' +
+    '</div>';
+  }).join('') || '<div class="mini-item">Aucune démo chaude détectée.</div>';
+
+  $('clusterBoard').innerHTML = info.suspiciousClusters.slice(0,8).map(cluster =>
+    '<div class="mini-item"><b>' + escapeHtml(cluster.type.toUpperCase()) + '</b> • ' + escapeHtml(cluster.key) + '<div class="small" style="margin-top:6px">' +
+    escapeHtml(cluster.list.map(x => x.license_key).join(', ')) + '</div></div>'
+  ).join('') || '<div class="mini-item">Aucun cluster multi-licence visible.</div>';
+}
+
+function getRiskEntry(item){
+  if(!currentInsights) return { score:0, reasons:[] };
+  return currentInsights.risky.find(entry => entry.item === item) || { score:0, reasons:[] };
+}
+
 async function loadList(){
   const q = encodeURIComponent($('q').value.trim());
   const status = encodeURIComponent($('statusFilter').value);
@@ -305,27 +659,177 @@ async function loadList(){
   });
 
   const items = Array.isArray(data.items) ? data.items : [];
+  currentListItems = items;
+  renderInsights();
 
-  $('tbody').innerHTML = items.map(item => `
-    <tr>
-      <td><b>${escapeHtml(item.license_key)}</b></td>
-      <td>${escapeHtml(fmt(item.plan_id))}</td>
-      <td><span class="badge">${escapeHtml(fmt(item.status))}</span></td>
-      <td>${escapeHtml(fmt(item.device_id))}</td>
-      <td>${escapeHtml(fmt(item.expiration))}</td>
-      <td>${escapeHtml(fmt(item.analyses_remaining))}</td>
-      <td>${escapeHtml(fmt(item.analysis_count))}</td>
-      <td>
-        <button type="button" onclick="prefillAction('${String(item.license_key || '').replace(/'/g, "\\'")}')">Choisir</button>
-      </td>
-    </tr>
-  `).join('') || '<tr><td colspan="8">Aucune licence trouvée.</td></tr>';
+  $('tbody').innerHTML = items.map((item, index) => {
+    const risk = getRiskEntry(item);
+    const segmentClass = isDemo(item) ? 'demo' : 'premium';
+    const segmentLabel = isDemo(item) ? 'Démo' : 'Premium';
+    return `
+      <tr class="clickable-row" onclick="openLicenseModalByIndex(${index})">
+        <td><b>${escapeHtml(item.license_key)}</b></td>
+        <td><span class="badge ${segmentClass}">${segmentLabel}</span></td>
+        <td>${escapeHtml(fmt(item.plan_id))}</td>
+        <td><span class="badge">${escapeHtml(fmt(item.status))}</span></td>
+        <td><div class="cell-2line"><b>${escapeHtml(getDisplayUser(item))}</b><span class="small">${escapeHtml(getEmail(item) || '—')}</span></div></td>
+        <td>${escapeHtml(fmt(getDevice(item)))}</td>
+        <td>${escapeHtml(fmt(item.expiration))}</td>
+        <td>${escapeHtml(fmt(item.analyses_remaining))}</td>
+        <td>${escapeHtml(fmt(item.analysis_count))}</td>
+        <td>${risk.score ? '<span class="badge risk">' + escapeHtml(risk.score) + '</span>' : '<span class="badge low">0</span>'}</td>
+        <td>
+          <button type="button" onclick="event.stopPropagation(); prefillAction('${String(item.license_key || '').replace(/'/g, "\\'")}')">Choisir</button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="11">Aucune licence trouvée.</td></tr>';
 }
 
 window.prefillAction = function(key){
   $('actionKey').value = key || '';
   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 };
+
+function activateTab(name){
+  const map = {
+    summary: ['tabSummary', 'tabSummaryPanel'],
+    signals: ['tabSignals', 'tabSignalsPanel'],
+    raw: ['tabRaw', 'tabRawPanel']
+  };
+  for(const [key, [btnId, panelId]] of Object.entries(map)){
+    $(btnId).classList.toggle('active', key === name);
+    $(panelId).classList.toggle('hidden', key !== name);
+  }
+}
+
+function buildSummaryPanel(item){
+  const email = getEmail(item) || '—';
+  const risk = getRiskEntry(item);
+  const limit = getAnalysisLimit(item);
+  const segment = isDemo(item) ? 'Licence Démo' : 'Licence Standard / Premium';
+  return `
+    <div class="detail-grid">
+      <div class="detail-box"><span>Clé licence</span><b>${escapeHtml(fmt(item.license_key))}</b></div>
+      <div class="detail-box"><span>Type</span><b>${escapeHtml(segment)}</b></div>
+      <div class="detail-box"><span>Score de risque</span><b>${escapeHtml(String(risk.score || 0))}</b></div>
+      <div class="detail-box"><span>Plan ID</span><b>${escapeHtml(fmt(item.plan_id))}</b></div>
+      <div class="detail-box"><span>Libellé du plan</span><b>${escapeHtml(fmt(item.plan_label))}</b></div>
+      <div class="detail-box"><span>Statut</span><b>${escapeHtml(fmt(item.status))}</b></div>
+      <div class="detail-box"><span>Utilisateur</span><b>${escapeHtml(fmt(getUserName(item) || '—'))}</b></div>
+      <div class="detail-box"><span>Email</span><b>${escapeHtml(fmt(email))}</b></div>
+      <div class="detail-box"><span>Device / PC</span><b>${escapeHtml(fmt(getDevice(item)))}</b></div>
+      <div class="detail-box"><span>Date d’activation</span><b>${escapeHtml(fmt(item.activated_at || item.activation_date || item.first_activation_at))}</b></div>
+      <div class="detail-box"><span>Expiration</span><b>${escapeHtml(fmt(item.expiration))}</b></div>
+      <div class="detail-box"><span>Limite totale estimée</span><b>${escapeHtml(fmt(limit || '—'))}</b></div>
+      <div class="detail-box"><span>Captures restantes</span><b>${escapeHtml(fmt(item.analyses_remaining))}</b></div>
+      <div class="detail-box"><span>Analyses effectuées</span><b>${escapeHtml(fmt(item.analysis_count))}</b></div>
+      <div class="detail-box"><span>Prix USDT</span><b>${escapeHtml(fmt(item.price_usdt))}</b></div>
+    </div>
+    <div class="detail-full">
+      <span class="label">Lecture business</span>
+      <pre class="detail-pre">${escapeHtml(isDemo(item)
+        ? (getRemaining(item) !== null && getRemaining(item) <= 2 ? 'Démo proche de la fin : candidate naturelle pour relance premium.' : 'Démo encore en cours d’exploration.')
+        : (getStatus(item) === 'active' ? 'Client premium actif.' : 'Licence premium non active ou en pause.'))}</pre>
+    </div>
+  `;
+}
+
+function buildSignalsPanel(item){
+  const risk = getRiskEntry(item);
+  const emailKey = lower(getEmail(item));
+  const deviceKey = lower(getDevice(item));
+  const emailMatches = emailKey && currentInsights?.emails.get(emailKey) ? currentInsights.emails.get(emailKey) : [];
+  const deviceMatches = deviceKey && currentInsights?.devices.get(deviceKey) ? currentInsights.devices.get(deviceKey) : [];
+  return `
+    <div class="detail-full">
+      <span class="label">Signaux de risque</span>
+      <pre class="detail-pre">${escapeHtml(risk.reasons.length ? risk.reasons.join('\n') : 'Aucun signal critique détecté sur cette licence.')}</pre>
+    </div>
+    <div class="detail-full">
+      <span class="label">Autres licences liées au même email</span>
+      <pre class="detail-pre">${escapeHtml(emailMatches.length ? emailMatches.map(x => x.license_key + ' • ' + fmt(x.status) + ' • ' + fmt(x.plan_id)).join('\n') : 'Aucune autre licence visible pour cet email.')}</pre>
+    </div>
+    <div class="detail-full">
+      <span class="label">Autres licences liées au même device</span>
+      <pre class="detail-pre">${escapeHtml(deviceMatches.length ? deviceMatches.map(x => x.license_key + ' • ' + fmt(x.status) + ' • ' + fmt(x.plan_id)).join('\n') : 'Aucune autre licence visible pour ce device.')}</pre>
+    </div>
+  `;
+}
+
+function buildRawPanel(item){
+  return `
+    <div class="detail-full">
+      <span class="label">Objet complet licence (debug / contrôle)</span>
+      <pre class="detail-pre">${escapeHtml(prettyJson(item))}</pre>
+    </div>
+  `;
+}
+
+window.openLicenseModalByIndex = function(index){
+  const item = Array.isArray(currentListItems) ? currentListItems[index] : null;
+  if(!item) return;
+
+  currentModalLicense = item;
+  $('tabSummaryPanel').innerHTML = buildSummaryPanel(item);
+  $('tabSignalsPanel').innerHTML = buildSignalsPanel(item);
+  $('tabRawPanel').innerHTML = buildRawPanel(item);
+  activateTab('summary');
+  $('licenseModal').classList.add('show');
+  $('licenseModal').setAttribute('aria-hidden', 'false');
+};
+
+function closeLicenseModal(){
+  $('licenseModal').classList.remove('show');
+  $('licenseModal').setAttribute('aria-hidden', 'true');
+  currentModalLicense = null;
+}
+
+$('btnCloseLicenseModal').onclick = closeLicenseModal;
+$('btnModalCloseBottom').onclick = closeLicenseModal;
+$('tabSummary').onclick = () => activateTab('summary');
+$('tabSignals').onclick = () => activateTab('signals');
+$('tabRaw').onclick = () => activateTab('raw');
+
+$('licenseModal').addEventListener('click', (e) => {
+  if(e.target === $('licenseModal')) closeLicenseModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && $('licenseModal').classList.contains('show')) closeLicenseModal();
+});
+
+$('btnModalChoose').onclick = () => {
+  if(!currentModalLicense) return;
+  prefillAction(currentModalLicense.license_key || '');
+  closeLicenseModal();
+};
+
+$('btnModalCopyKey').onclick = async () => {
+  if(!currentModalLicense?.license_key) return;
+  try{
+    await copyText(currentModalLicense.license_key);
+    alert('Clé copiée.');
+  }catch(err){
+    alert('Copie impossible.');
+  }
+};
+
+function exportCurrentList(){
+  if(!currentListItems.length){
+    alert('Aucune donnée à exporter.');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(currentListItems, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'admin_licenses_export_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 async function refreshDashboard(showAlertOnError = true){
   if(isRefreshing) return;
@@ -376,6 +880,8 @@ $('btnRunAction').onclick = async () => {
 $('btnRefresh').onclick = async () => {
   await refreshDashboard(true);
 };
+
+$('btnExportList').onclick = exportCurrentList;
 
 function setBulkPreset(preset){
   $('bulkCount').value = preset.count || 1000;
