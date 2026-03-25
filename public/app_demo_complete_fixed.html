@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Forex Capture Analyzer - Demo</title>
+</head>
+<body>
+
+<button id="btnAnalyze">Lancer analyse</button>
+
+<script>
+const DEMO_ANALYSIS_KEY = "FXA_DEMO_ANALYSIS_DONE";
+
+function isDemoUsed(){
+  return localStorage.getItem(DEMO_ANALYSIS_KEY) === "1";
+}
+
+function markDemoUsed(){
+  localStorage.setItem(DEMO_ANALYSIS_KEY, "1");
+}
+
+window.addEventListener("load", ()=>{
+  if(isDemoUsed()){
+    setTimeout(()=>{
+      showPremiumPopup("Vous avez déjà utilisé votre analyse gratuite. Passez au Premium.");
+    }, 800);
+  }
+});
+
+const btnAnalyze = document.getElementById("btnAnalyze");
+
+btnAnalyze.addEventListener("click", function(e){
+
+  if(isDemoUsed()){
+    e.preventDefault();
+    showPremiumPopup("Analyse déjà utilisée. Passez au Premium.");
+    return;
+  }
+
+  markDemoUsed();
+
+  setTimeout(()=>{
+    showPremiumPopup("Analyse terminée. Passez au Premium pour continuer.");
+  }, 3000);
+
+});
+
+setTimeout(()=>{
+  showPremiumPopup("Découvrez toute la puissance du logiciel. Passez au Premium.");
+}, 20000);
+
+function showPremiumPopup(message){
+
+  if(document.getElementById("premiumPopup")) return;
+
+  const popup = document.createElement("div");
+  popup.id = "premiumPopup";
+
+  popup.style.position = "fixed";
+  popup.style.inset = "0";
+  popup.style.background = "rgba(0,0,0,.85)";
+  popup.style.display = "flex";
+  popup.style.alignItems = "center";
+  popup.style.justifyContent = "center";
+  popup.style.zIndex = "999999";
+
+  popup.innerHTML = `
+    <div style="
+      width:min(520px,92%);
+      background:#0b2b31;
+      border-radius:22px;
+      padding:28px;
+      text-align:center;
+      color:white;
+    ">
+
+      <h2 style="color:#ffd400;">Version Démo</h2>
+
+      <p>${message}</p>
+
+      <button onclick="location.href='https://www.forexcaptureanalyzer.com/pages/tarifs.html'">
+        🚀 Passer au Premium
+      </button>
+
+      <button onclick="redirectTarifs()">
+        Fermer
+      </button>
+
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+}
+
+function redirectTarifs(){
+  location.href = "https://www.forexcaptureanalyzer.com/pages/tarifs.html";
+}
+</script>
+
+</body>
+</html>
