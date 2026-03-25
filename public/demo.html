@@ -257,25 +257,6 @@ button:hover,a.btn:hover{
   color:rgba(255,255,255,.74);
   font-size:13.5px;
 }
-.email-wrap{
-  margin-top:14px;
-}
-.email-input{
-  width:100%;
-  min-height:48px;
-  padding:12px 14px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  font-size:14px;
-  outline:none;
-}
-.email-input::placeholder{color:rgba(255,255,255,.58)}
-.email-input:focus{
-  border-color:rgba(22,217,199,.42);
-  box-shadow:0 0 0 3px rgba(22,217,199,.10);
-}
 @media(max-width:780px){
   .content{grid-template-columns:1fr}
 }
@@ -337,10 +318,6 @@ button:hover,a.btn:hover{
           <h2>Génération instantanée</h2>
           <p>Votre licence démo personnelle sera créée par le système, enregistrée et reste liée à cet appareil.</p>
 
-          <div class="email-wrap">
-            <input id="emailInput" class="email-input" type="email" placeholder="Entrez votre adresse email" autocomplete="email" inputmode="email" required />
-          </div>
-
           <div class="actions">
             <button id="btnGenerate" class="primary">Générer ma clé d’essai</button>
             <a class="btn warn" href="index.html">Retour connexion</a>
@@ -370,7 +347,7 @@ button:hover,a.btn:hover{
 <script src="config.js"></script>
 <script>
 const SESSION_KEY = 'FXA_V28_SESSION';
-const DEFAULT_API_BASE = 'https://forex-capture-analyzer-multi-deploy-pack.onrender.com';
+const DEFAULT_API_BASE = window.location.origin;
 const API_BASE = String((window.FXA_CONFIG && window.FXA_CONFIG.API_BASE) || DEFAULT_API_BASE).replace(/\/$/, '');
 
 function apiUrl(path){
@@ -380,7 +357,6 @@ function apiUrl(path){
 const msg = document.getElementById('msg');
 const keyBox = document.getElementById('keyBox');
 const keyLine = document.getElementById('keyLine');
-const emailInput = document.getElementById('emailInput');
 let currentDemo = null;
 
 function setMsg(text, type){
@@ -454,21 +430,6 @@ async function postJson(path, body){
 
 document.getElementById('btnGenerate').addEventListener('click', async () => {
   try {
-    const email = (emailInput.value || '').trim();
-
-    if (!email) {
-      setMsg('Veuillez entrer votre adresse email avant de générer la licence.', 'bad');
-      emailInput.focus();
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setMsg('Adresse email invalide. Vérifiez et réessayez.', 'bad');
-      emailInput.focus();
-      return;
-    }
-
     setMsg('Génération sécurisée de votre clé démo en cours…', 'info');
 
     const deviceId = await getDeviceId();
@@ -478,13 +439,11 @@ document.getElementById('btnGenerate').addEventListener('click', async () => {
       platform: navigator.platform || '',
       source: 'cloudflare-pages',
       appVersion: 'V28',
-      page: 'demo',
-      email
+      page: 'demo'
     };
 
     const result = await postJson('/api/license/demo/generate', {
       deviceId,
-      email,
       clientMeta
     });
 
@@ -534,8 +493,11 @@ document.getElementById('btnTryNow').addEventListener('click', () => {
     setMsg('Générez d’abord votre clé démo.', 'bad');
     return;
   }
-  const target = 'index.html?demo_key=' + encodeURIComponent(currentDemo.key);
-  location.href = target;
+  setMsg('Synchronisation sécurisée de votre licence démo… redirection vers la connexion en cours.', 'info');
+  const target = 'index.html?demo_key=' + encodeURIComponent(currentDemo.key) + '&autostart=1';
+  setTimeout(() => {
+    location.href = target;
+  }, 1200);
 });
 </script>
 </body>

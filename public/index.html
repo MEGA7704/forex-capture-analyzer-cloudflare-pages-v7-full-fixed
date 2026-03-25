@@ -434,28 +434,55 @@ async function postJson(path, body){
   return data;
 }
 
-(async function boot(){
-  try {
-    const deviceId = await getDeviceId();
-    document.getElementById('deviceBadge').textContent = 'Appareil: ' + deviceId;
-  } catch {
-    document.getElementById('deviceBadge').textContent = 'Appareil: inconnu';
+
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function activateLicenseWithRetry(key, deviceId, clientMeta, options = {}){
+  const attempts = Number(options.attempts || 4);
+  const baseDelay = Number(options.baseDelay || 900);
+  let lastError = null;
+
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await postJson('/api/license/portal', {
+        key,
+        deviceId,
+        clientMeta
+      });
+    } catch (err) {
+      lastError = err;
+      const message = String(err && err.message || '');
+      const isRetryable = /licence introuvable/i.test(message);
+      if (!isRetryable || i === attempts - 1) {
+        throw err;
+      }
+      setMsg('Licence en cours de synchronisation sécurisée… tentative ' + (i + 2) + '/' + attempts + '…', 'info');
+      await sleep(baseDelay * (i + 1));
+    }
   }
 
-  document.getElementById('year').textContent = new Date().getFullYear();
-})();
+  throw lastError || new Error('Activation impossible.');
+}
 
-document.getElementById('btnActivate').addEventListener('click', async () => {
-  const key = (input.value || '').trim().toUpperCase();
+async function runActivationFlow(key, options = {}){
+  const normalizedKey = String(key || '').trim().toUpperCase();
 
-  if (!key) {
+  if (!normalizedKey) {
     setMsg('Veuillez entrer votre clé.', 'bad');
     input.focus();
     return;
   }
 
   try {
-    setMsg('Vérification premium en cours…', 'info');
+    const isAutoDemo = !!options.isAutoDemo;
+    setMsg(
+      isAutoDemo
+        ? 'Préparation de votre accès démo sécurisé…'
+        : 'Vérification premium en cours…',
+      'info'
+    );
 
     const deviceId = await getDeviceId();
     const clientMeta = {
@@ -463,13 +490,14 @@ document.getElementById('btnActivate').addEventListener('click', async () => {
       lang: navigator.language || '',
       platform: navigator.platform || '',
       source: 'cloudflare-pages',
-      appVersion: 'V28'
+      appVersion: 'V28',
+      page: 'index',
+      auto_demo_flow: isAutoDemo ? 'yes' : 'no'
     };
 
-    const result = await postJson('/api/license/portal', {
-      key,
-      deviceId,
-      clientMeta
+    const result = await activateLicenseWithRetry(normalizedKey, deviceId, clientMeta, {
+      attempts: isAutoDemo ? 5 : 4,
+      baseDelay: isAutoDemo ? 1000 : 900
     });
 
     if (!result || !(result.ok || result.success)) {
@@ -492,7 +520,7 @@ document.getElementById('btnActivate').addEventListener('click', async () => {
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         token: result.token || '',
         deviceId,
-        key
+        key: normalizedKey
       }));
       localStorage.removeItem(ADMIN_MODE_KEY);
 
@@ -516,9 +544,29 @@ document.getElementById('btnActivate').addEventListener('click', async () => {
       return;
     }
 
+    if (/licence introuvable/i.test(message)) {
+      setMsg('Licence introuvable pour le moment. Réessayez dans 2 à 5 secondes. Si la clé vient d’être générée en démo, laissez juste la synchronisation se terminer.', 'bad');
+      return;
+    }
+
     setMsg(message, 'bad');
     console.error('Activation error:', err);
   }
+}
+
+(async function boot(){
+  try {
+    const deviceId = await getDeviceId();
+    document.getElementById('deviceBadge').textContent = 'Appareil: ' + deviceId;
+  } catch {
+    document.getElementById('deviceBadge').textContent = 'Appareil: inconnu';
+  }
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+})();
+
+document.getElementById('btnActivate').addEventListener('click', async () => {
+  await runActivationFlow(input.value || '');
 });
 
 input.addEventListener('keydown', e => {
@@ -526,4 +574,25 @@ input.addEventListener('keydown', e => {
     document.getElementById('btnActivate').click();
   }
 });
+
+(function handleAutoDemoKey(){
+  try {
+    const params = new URLSearchParams(window.location.search || '');
+    const demoKey = String(params.get('demo_key') || '').trim().toUpperCase();
+    const autoStart = String(params.get('autostart') || '').trim();
+
+    if (!demoKey) return;
+
+    input.value = demoKey;
+
+    if (autoStart === '1') {
+      setTimeout(() => {
+        runActivationFlow(demoKey, { isAutoDemo: true });
+      }, 800);
+    }
+  } catch (err) {
+    console.error('Auto demo init error:', err);
+  }
+})();
+
 </script>
