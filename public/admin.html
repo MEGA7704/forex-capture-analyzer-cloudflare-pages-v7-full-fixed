@@ -44,7 +44,7 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
 .small{font-size:12px;color:rgba(255,255,255,.7)}
 .badge{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);font-size:11px;font-weight:800}
 .log{max-height:240px;overflow:auto;font-size:12px;line-height:1.5;background:rgba(0,0,0,.15);padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
-@media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(170px,1fr));}}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.58);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999}.modal-backdrop.show{display:flex}.modal-box{width:min(980px,100%);max-height:90vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:24px;background:radial-gradient(700px 240px at 10% 0%, rgba(22,217,199,.10), transparent 60%),radial-gradient(700px 260px at 90% 0%, rgba(255,212,0,.10), transparent 60%),linear-gradient(180deg, rgba(18,44,50,.98), rgba(8,23,27,.98));box-shadow:0 30px 90px rgba(0,0,0,.45);padding:18px}.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.modal-title{margin:0;font-size:22px;color:#fff;font-weight:900}.modal-sub{margin-top:6px;color:rgba(255,255,255,.68);font-size:12px}.modal-close{min-width:44px;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font-size:20px;font-weight:900;cursor:pointer}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:12px}.detail-box{border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)}.detail-box span{display:block;font-size:11px;color:rgba(255,255,255,.62);margin-bottom:6px}.detail-box b{display:block;font-size:14px;color:#fff;line-height:1.45;word-break:break-word}.detail-full{margin-top:12px;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)}.detail-full .label{display:block;font-size:11px;color:rgba(255,255,255,.62);margin-bottom:8px}.detail-pre{margin:0;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.55;color:#fff}.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}@media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(170px,1fr));}}@media(max-width:760px){.detail-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -196,6 +196,25 @@ tbody tr:hover{background:rgba(255,255,255,.04)}
   </div>
 </div>
 
+<div id="licenseModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h2 class="modal-title">Détails complets de la licence</h2>
+        <div class="modal-sub">Activation, utilisateur, appareil, consommation, statut et informations techniques.</div>
+      </div>
+      <button id="btnCloseLicenseModal" class="modal-close" type="button">×</button>
+    </div>
+
+    <div id="licenseModalContent"></div>
+
+    <div class="modal-actions">
+      <button id="btnModalChoose" type="button" class="primary">Choisir cette licence</button>
+      <button id="btnModalCloseBottom" type="button" class="warn">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const TOKEN_KEY = 'FXA_ADMIN_TOKEN_V28';
 const $ = id => document.getElementById(id);
@@ -294,6 +313,7 @@ async function loadStats(){
   ).join('') || 'Aucun événement.';
 }
 
+
 async function loadList(){
   const q = encodeURIComponent($('q').value.trim());
   const status = encodeURIComponent($('statusFilter').value);
@@ -305,9 +325,10 @@ async function loadList(){
   });
 
   const items = Array.isArray(data.items) ? data.items : [];
+  window.__LICENSE_ITEMS__ = items;
 
-  $('tbody').innerHTML = items.map(item => `
-    <tr>
+  $('tbody').innerHTML = items.map((item, index) => `
+    <tr onclick="openLicenseModalByIndex(${index})" style="cursor:pointer">
       <td><b>${escapeHtml(item.license_key)}</b></td>
       <td>${escapeHtml(fmt(item.plan_id))}</td>
       <td><span class="badge">${escapeHtml(fmt(item.status))}</span></td>
@@ -316,11 +337,125 @@ async function loadList(){
       <td>${escapeHtml(fmt(item.analyses_remaining))}</td>
       <td>${escapeHtml(fmt(item.analysis_count))}</td>
       <td>
-        <button type="button" onclick="prefillAction('${String(item.license_key || '').replace(/'/g, "\\'")}')">Choisir</button>
+        <button type="button" onclick="event.stopPropagation(); prefillAction('${String(item.license_key || '').replace(/'/g, "\'")}')">Choisir</button>
       </td>
     </tr>
   `).join('') || '<tr><td colspan="8">Aucune licence trouvée.</td></tr>';
 }
+
+window.__LICENSE_ITEMS__ = [];
+let currentModalLicense = null;
+
+function prettyJson(value){
+  try{
+    if(value === null || typeof value === 'undefined' || value === '') return '—';
+    if(typeof value === 'string') return value;
+    return JSON.stringify(value, null, 2);
+  }catch{
+    return String(value ?? '—');
+  }
+}
+
+function getUserDisplay(item){
+  return (
+    item.user_name ||
+    item.full_name ||
+    item.client_name ||
+    item.customer_name ||
+    item.owner_name ||
+    item.email ||
+    item.user_email ||
+    item.client_email ||
+    '—'
+  );
+}
+
+function buildLicenseModalHtml(item){
+  const email =
+    item.email ||
+    item.user_email ||
+    item.client_email ||
+    (item.client_meta && item.client_meta.email) ||
+    '—';
+
+  const username = getUserDisplay(item);
+  const activationDate = item.activated_at || item.activation_date || item.first_activation_at || '—';
+  const device = item.device_id || item.device_locked || '—';
+  const ip = item.last_ip || item.last_ip_hash || item.ip || '—';
+  const isDemo =
+    String(item.plan_id || '').toUpperCase().includes('DEMO') ||
+    String(item.plan_label || '').toUpperCase().includes('DEMO') ||
+    String(item.license_key || '').toUpperCase().startsWith('DEMO');
+
+  return `
+    <div class="detail-grid">
+      <div class="detail-box"><span>Clé licence</span><b>${escapeHtml(fmt(item.license_key))}</b></div>
+      <div class="detail-box"><span>Type</span><b>${isDemo ? 'Licence Démo (10 captures max)' : 'Licence Standard / Premium'}</b></div>
+      <div class="detail-box"><span>Plan ID</span><b>${escapeHtml(fmt(item.plan_id))}</b></div>
+      <div class="detail-box"><span>Libellé du plan</span><b>${escapeHtml(fmt(item.plan_label))}</b></div>
+      <div class="detail-box"><span>Statut</span><b>${escapeHtml(fmt(item.status))}</b></div>
+      <div class="detail-box"><span>Mode</span><b>${escapeHtml(fmt(item.mode))}</b></div>
+      <div class="detail-box"><span>Utilisateur</span><b>${escapeHtml(fmt(username))}</b></div>
+      <div class="detail-box"><span>Email</span><b>${escapeHtml(fmt(email))}</b></div>
+      <div class="detail-box"><span>Device / PC</span><b>${escapeHtml(fmt(device))}</b></div>
+      <div class="detail-box"><span>Appareil verrouillé</span><b>${escapeHtml(fmt(item.device_locked))}</b></div>
+      <div class="detail-box"><span>Date d’activation</span><b>${escapeHtml(fmt(activationDate))}</b></div>
+      <div class="detail-box"><span>Expiration</span><b>${escapeHtml(fmt(item.expiration))}</b></div>
+      <div class="detail-box"><span>Captures autorisées</span><b>${escapeHtml(fmt(item.analysis_limit))}</b></div>
+      <div class="detail-box"><span>Captures restantes</span><b>${escapeHtml(fmt(item.analyses_remaining))}</b></div>
+      <div class="detail-box"><span>Analyses effectuées</span><b>${escapeHtml(fmt(item.analysis_count))}</b></div>
+      <div class="detail-box"><span>Sessions</span><b>${escapeHtml(fmt(item.session_count))}</b></div>
+      <div class="detail-box"><span>Prix USDT</span><b>${escapeHtml(fmt(item.price_usdt))}</b></div>
+      <div class="detail-box"><span>Durée (jours)</span><b>${escapeHtml(fmt(item.duration_days))}</b></div>
+      <div class="detail-box"><span>Dernière IP / hash</span><b>${escapeHtml(fmt(ip))}</b></div>
+      <div class="detail-box"><span>Dernière activité</span><b>${escapeHtml(fmt(item.last_seen_at))}</b></div>
+      <div class="detail-box"><span>Rapports erreurs</span><b>${escapeHtml(fmt(item.error_reports))}</b></div>
+      <div class="detail-box"><span>SOS trader</span><b>${escapeHtml(fmt(item.sos_reports))}</b></div>
+      <div class="detail-box"><span>Date de création</span><b>${escapeHtml(fmt(item.issued_at))}</b></div>
+      <div class="detail-box"><span>Dernière activation</span><b>${escapeHtml(fmt(item.activated_at))}</b></div>
+    </div>
+
+    <div class="detail-full">
+      <span class="label">Notes administratives</span>
+      <pre class="detail-pre">${escapeHtml(prettyJson(item.notes || '—'))}</pre>
+    </div>
+
+    <div class="detail-full">
+      <span class="label">Métadonnées client / activation</span>
+      <pre class="detail-pre">${escapeHtml(prettyJson(item.client_meta || item.clientMeta || item.meta || '—'))}</pre>
+    </div>
+
+    <div class="detail-full">
+      <span class="label">Objet complet licence (debug / contrôle)</span>
+      <pre class="detail-pre">${escapeHtml(prettyJson(item))}</pre>
+    </div>
+  `;
+}
+
+window.openLicenseModalByIndex = function(index){
+  const item = Array.isArray(window.__LICENSE_ITEMS__) ? window.__LICENSE_ITEMS__[index] : null;
+  if(!item) return;
+  currentModalLicense = item;
+  $('licenseModalContent').innerHTML = buildLicenseModalHtml(item);
+  $('licenseModal').classList.add('show');
+  $('licenseModal').setAttribute('aria-hidden', 'false');
+};
+
+function closeLicenseModal(){
+  $('licenseModal').classList.remove('show');
+  $('licenseModal').setAttribute('aria-hidden', 'true');
+  currentModalLicense = null;
+}
+
+$('btnCloseLicenseModal').onclick = closeLicenseModal;
+$('btnModalCloseBottom').onclick = closeLicenseModal;
+$('licenseModal').addEventListener('click', (e) => { if(e.target === $('licenseModal')) closeLicenseModal(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && $('licenseModal').classList.contains('show')) closeLicenseModal(); });
+$('btnModalChoose').onclick = () => {
+  if(!currentModalLicense) return;
+  prefillAction(currentModalLicense.license_key || '');
+  closeLicenseModal();
+};
 
 window.prefillAction = function(key){
   $('actionKey').value = key || '';

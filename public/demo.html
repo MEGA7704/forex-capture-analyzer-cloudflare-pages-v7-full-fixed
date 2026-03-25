@@ -257,6 +257,37 @@ button:hover,a.btn:hover{
   color:rgba(255,255,255,.74);
   font-size:13.5px;
 }
+.field-wrap{
+  margin-top:14px;
+}
+.field-label{
+  display:block;
+  margin:0 0 8px;
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+.field-input{
+  width:100%;
+  min-height:50px;
+  padding:14px 15px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.22);
+  color:#fff;
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.field-input::placeholder{
+  color:rgba(255,255,255,.46);
+}
+.field-input:focus{
+  border-color:rgba(22,217,199,.45);
+  box-shadow:0 0 0 3px rgba(22,217,199,.10);
+  background:rgba(0,0,0,.26);
+}
 @media(max-width:780px){
   .content{grid-template-columns:1fr}
 }
@@ -318,8 +349,21 @@ button:hover,a.btn:hover{
           <h2>Génération instantanée</h2>
           <p>Votre licence démo personnelle sera créée par le système, enregistrée et reste liée à cet appareil.</p>
 
+          <div class="field-wrap">
+            <label class="field-label" for="emailInput">Adresse email obligatoire</label>
+            <input
+              type="email"
+              id="emailInput"
+              class="field-input"
+              placeholder="Entrez votre adresse email"
+              autocomplete="email"
+              inputmode="email"
+              required
+            />
+          </div>
+
           <div class="actions">
-            <button id="btnGenerate" class="primary">Générer ma clé d’essai</button>
+            <button id="btnGenerate" class="primary" type="button">Générer ma clé d’essai</button>
             <a class="btn warn" href="index.html">Retour connexion</a>
           </div>
 
@@ -357,6 +401,7 @@ function apiUrl(path){
 const msg = document.getElementById('msg');
 const keyBox = document.getElementById('keyBox');
 const keyLine = document.getElementById('keyLine');
+const emailInput = document.getElementById('emailInput');
 let currentDemo = null;
 
 function setMsg(text, type){
@@ -394,6 +439,10 @@ async function getDeviceId(){
   return 'PC-' + hex.slice(0, 12).toUpperCase();
 }
 
+function isValidEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 async function postJson(path, body){
   const res = await fetch(apiUrl(path), {
     method:'POST',
@@ -428,12 +477,34 @@ async function postJson(path, body){
   }
 })();
 
+emailInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btnGenerate').click();
+  }
+});
+
 document.getElementById('btnGenerate').addEventListener('click', async () => {
   try {
+    const email = String(emailInput.value || '').trim().toLowerCase();
+
+    if (!email) {
+      setMsg('Veuillez entrer votre adresse email avant de générer la licence.', 'bad');
+      emailInput.focus();
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setMsg('Adresse email invalide. Vérifiez puis réessayez.', 'bad');
+      emailInput.focus();
+      return;
+    }
+
     setMsg('Génération sécurisée de votre clé démo en cours…', 'info');
 
     const deviceId = await getDeviceId();
     const clientMeta = {
+      email,
       ua: navigator.userAgent || '',
       lang: navigator.language || '',
       platform: navigator.platform || '',
@@ -444,6 +515,7 @@ document.getElementById('btnGenerate').addEventListener('click', async () => {
 
     const result = await postJson('/api/license/demo/generate', {
       deviceId,
+      email,
       clientMeta
     });
 
@@ -456,13 +528,15 @@ document.getElementById('btnGenerate').addEventListener('click', async () => {
       key: result.demoKey,
       token: result.token || '',
       deviceId,
+      email,
       license: result.license
     };
 
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       token: currentDemo.token,
       deviceId: currentDemo.deviceId,
-      key: currentDemo.key
+      key: currentDemo.key,
+      email: currentDemo.email
     }));
 
     document.getElementById('capturesLeft').textContent =
@@ -471,7 +545,7 @@ document.getElementById('btnGenerate').addEventListener('click', async () => {
     keyLine.textContent = result.demoKey;
     keyBox.style.display = 'block';
 
-    setMsg('Votre licence démo a été créée avec succès. Elle est liée à cet appareil et prête à être utilisée.', 'ok');
+    setMsg('Votre licence démo a été créée avec succès. Elle est liée à cet appareil et à votre adresse email.', 'ok');
   } catch(err) {
     setMsg(err.message || 'Génération impossible.', 'bad');
     console.error(err);
@@ -493,7 +567,7 @@ document.getElementById('btnTryNow').addEventListener('click', () => {
     setMsg('Générez d’abord votre clé démo.', 'bad');
     return;
   }
-  setMsg('Synchronisation sécurisée de votre licence démo… redirection vers la connexion en cours.', 'info');
+  setMsg('Préparation de votre session démo…', 'info');
   const target = 'index.html?demo_key=' + encodeURIComponent(currentDemo.key) + '&autostart=1';
   setTimeout(() => {
     location.href = target;

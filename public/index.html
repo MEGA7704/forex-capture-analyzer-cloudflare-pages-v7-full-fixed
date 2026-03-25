@@ -434,55 +434,63 @@ async function postJson(path, body){
   return data;
 }
 
+const DEMO_RETRY_DELAYS = [0, 900, 1600, 2400];
 
-function sleep(ms){
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function activateLicenseWithRetry(key, deviceId, clientMeta, options = {}){
-  const attempts = Number(options.attempts || 4);
-  const baseDelay = Number(options.baseDelay || 900);
+async function activateWithRetry(payload){
   let lastError = null;
-
-  for (let i = 0; i < attempts; i++) {
+  for (let i = 0; i < DEMO_RETRY_DELAYS.length; i++) {
+    const waitMs = DEMO_RETRY_DELAYS[i];
+    if (waitMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
     try {
-      return await postJson('/api/license/portal', {
-        key,
-        deviceId,
-        clientMeta
-      });
+      return await postJson('/api/license/portal', payload);
     } catch (err) {
       lastError = err;
-      const message = String(err && err.message || '');
-      const isRetryable = /licence introuvable/i.test(message);
-      if (!isRetryable || i === attempts - 1) {
+      const msg = String(err && err.message || '');
+      if (!/licence introuvable/i.test(msg) || i === DEMO_RETRY_DELAYS.length - 1) {
         throw err;
       }
-      setMsg('Licence en cours de synchronisation sécurisée… tentative ' + (i + 2) + '/' + attempts + '…', 'info');
-      await sleep(baseDelay * (i + 1));
+      setMsg('Synchronisation sécurisée de votre licence démo…', 'info');
     }
   }
-
   throw lastError || new Error('Activation impossible.');
 }
 
-async function runActivationFlow(key, options = {}){
-  const normalizedKey = String(key || '').trim().toUpperCase();
+(async function boot(){
+  try {
+    const deviceId = await getDeviceId();
+    document.getElementById('deviceBadge').textContent = 'Appareil: ' + deviceId;
+  } catch {
+    document.getElementById('deviceBadge').textContent = 'Appareil: inconnu';
+  }
 
-  if (!normalizedKey) {
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const params = new URLSearchParams(location.search);
+  const demoKey = (params.get('demo_key') || '').trim().toUpperCase();
+  const autostart = params.get('autostart') === '1';
+  if (demoKey) {
+    input.value = demoKey;
+    if (autostart) {
+      setTimeout(() => {
+        document.getElementById('btnActivate').click();
+      }, 250);
+    }
+  }
+})();
+
+document.getElementById('btnActivate').addEventListener('click', async () => {
+  const key = (input.value || '').trim().toUpperCase();
+
+  if (!key) {
     setMsg('Veuillez entrer votre clé.', 'bad');
     input.focus();
     return;
   }
 
   try {
-    const isAutoDemo = !!options.isAutoDemo;
-    setMsg(
-      isAutoDemo
-        ? 'Préparation de votre accès démo sécurisé…'
-        : 'Vérification premium en cours…',
-      'info'
-    );
+    setMsg('Vérification premium en cours…', 'info');
 
     const deviceId = await getDeviceId();
     const clientMeta = {
@@ -490,14 +498,13 @@ async function runActivationFlow(key, options = {}){
       lang: navigator.language || '',
       platform: navigator.platform || '',
       source: 'cloudflare-pages',
-      appVersion: 'V28',
-      page: 'index',
-      auto_demo_flow: isAutoDemo ? 'yes' : 'no'
+      appVersion: 'V28'
     };
 
-    const result = await activateLicenseWithRetry(normalizedKey, deviceId, clientMeta, {
-      attempts: isAutoDemo ? 5 : 4,
-      baseDelay: isAutoDemo ? 1000 : 900
+    const result = await activateWithRetry({
+      key,
+      deviceId,
+      clientMeta
     });
 
     if (!result || !(result.ok || result.success)) {
@@ -520,7 +527,7 @@ async function runActivationFlow(key, options = {}){
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         token: result.token || '',
         deviceId,
-        key: normalizedKey
+        key
       }));
       localStorage.removeItem(ADMIN_MODE_KEY);
 
@@ -544,29 +551,9 @@ async function runActivationFlow(key, options = {}){
       return;
     }
 
-    if (/licence introuvable/i.test(message)) {
-      setMsg('Licence introuvable pour le moment. Réessayez dans 2 à 5 secondes. Si la clé vient d’être générée en démo, laissez juste la synchronisation se terminer.', 'bad');
-      return;
-    }
-
     setMsg(message, 'bad');
     console.error('Activation error:', err);
   }
-}
-
-(async function boot(){
-  try {
-    const deviceId = await getDeviceId();
-    document.getElementById('deviceBadge').textContent = 'Appareil: ' + deviceId;
-  } catch {
-    document.getElementById('deviceBadge').textContent = 'Appareil: inconnu';
-  }
-
-  document.getElementById('year').textContent = new Date().getFullYear();
-})();
-
-document.getElementById('btnActivate').addEventListener('click', async () => {
-  await runActivationFlow(input.value || '');
 });
 
 input.addEventListener('keydown', e => {
@@ -574,25 +561,4 @@ input.addEventListener('keydown', e => {
     document.getElementById('btnActivate').click();
   }
 });
-
-(function handleAutoDemoKey(){
-  try {
-    const params = new URLSearchParams(window.location.search || '');
-    const demoKey = String(params.get('demo_key') || '').trim().toUpperCase();
-    const autoStart = String(params.get('autostart') || '').trim();
-
-    if (!demoKey) return;
-
-    input.value = demoKey;
-
-    if (autoStart === '1') {
-      setTimeout(() => {
-        runActivationFlow(demoKey, { isAutoDemo: true });
-      }, 800);
-    }
-  } catch (err) {
-    console.error('Auto demo init error:', err);
-  }
-})();
-
 </script>
